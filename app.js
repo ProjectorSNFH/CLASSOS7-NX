@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json()); // JSON 요청 본문 파싱
 app.use(cookieParser()); // 쿠키 파싱
 app.use(cors({
-  origin: '당신의_프론트엔드_주소', // 프론트엔드 주소 입력
+  origin: 'https://classos7.vercel.app/', // 프론트엔드 주소 입력
   credentials: true // 쿠키 전송 허용
 }));
 
