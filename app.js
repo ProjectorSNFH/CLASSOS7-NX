@@ -1,141 +1,103 @@
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const students = require('./student');
 const path = require('path');
+const students = require('./student'); // 학생 명단 파일
 
 const app = express();
-let activeSessions = {};   // 현재 로그인된 유저 관리
-let isServiceActive = true; // 서버 가동 상태 (기본 ON)
-const MASTER_PW = "1234";  // 마스터 비밀번호
-
-// --- 서버 메모리 세션 저장소 ---
-// 구조: { "std01": { sessionName: "홍길동-12345", loginTime: "..." } }
-
 app.use(express.json());
-app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 
-// 1. 로그인 로직 (중복 로그인 방지 포함)
-app.post('/login', (req, res) => {
-  const { id, password } = req.body;
-  const user = students.find(s => s.id === id && s.password === password);
+// --- 서버 상태 및 세션 저장소 ---
+let activeSessions = {};   // { "학번": { name: "이름", sessionName: "세션ID" } }
+let isServiceActive = true; 
+const MASTER_PW = "1234";
 
-  if (user) {
-    if (!isServiceActive) {
-      return res.status(503).json({ success: false, message: "현재 서버가 정지 상태입니다." });
-    }
-    // [중복 로그인 체크] 이미 해당 ID로 로그인된 세션이 있다면 삭제
-    if (activeSessions[user.id]) {
-      console.log(`[중복로그인] 기존 세션(${activeSessions[user.id].sessionName})을 제거합니다.`);
-      delete activeSessions[user.id];
-    }
-
-    // 새로운 세션 생성 (세션명: 이름-랜덤번호)
-    const sessionName = `${user.name}-${Math.floor(Math.random() * 10000)}`;
-    activeSessions[user.id] = {
-      sessionName: sessionName,
-      name: user.name,
-      number: user.number,
-      role: user.role,
-      loginTime: new Date().toLocaleString()
-    };
-
-    const userData = {
-      number: user.number,
-      name: user.name,
-      role: user.role,
-      sessionName: sessionName // 세션명도 같이 보냄
-    };
-
-    res.cookie('user_info', JSON.stringify(userData), {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: false,
-      secure: true,
-      sameSite: 'none'
+// 1. 서버 상태 체크 (프론트엔드 실시간 감시용)
+app.get('/test', (req, res) => {
+    res.json({ 
+        connection: isServiceActive ? 1 : 0, 
+        activeSessions: Object.values(activeSessions).map(s => s.name) 
     });
-
-    return res.json({ success: true, user: userData });
-  } else {
-    return res.status(401).json({ success: false, message: "ID/PW 불일치" });
-  }
 });
 
+// 2. 로그인 처리
+app.post('/login', (req, res) => {
+    if (!isServiceActive) return res.status(503).json({ success: false, message: "시스템 점검 중입니다." });
+
+    const { id, password } = req.body;
+    const user = students.find(s => s.id === id && s.password === password);
+
+    if (user) {
+        if (activeSessions[user.id]) delete activeSessions[user.id]; // 중복 로그인 제거
+
+        const sessionName = `${user.name}-${Math.floor(Math.random() * 10000)}`;
+        activeSessions[user.id] = { name: user.name, sessionName: sessionName };
+
+        res.json({ 
+            success: true, 
+            user: { name: user.name, role: user.role, sessionName: sessionName } 
+        });
+    } else {
+        res.status(401).json({ success: false, message: "아이디 또는 비밀번호가 틀립니다." });
+    }
+});
+
+// 3. 관리자 페이지 제공 (Koyeb 서버 주소/auth로 접속)
 app.get('/auth', (req, res) => {
-  // __dirname은 현재 app.js가 있는 폴더 위치입니다.
-  res.sendFile(path.join(__dirname, 'MasterControl.html'));
+    res.sendFile(path.join(__dirname, 'MasterControl.html'));
 });
 
-// 2. 관리자 마스터 컨트롤 (DOS 스타일 API)
+// 4. 마스터 컨트롤 API
 app.post('/admin/master-control', (req, res) => {
     const { password, command } = req.body;
-    
-    // 1. 단순 로그인 확인 (커맨드 없이 비번만 왔을 때)
-    if (password === MASTER_PW && !command) {
-        return res.send("MASTER CONTROL READY...");
-    }
-    if (password !== MASTER_PW) {
-        return res.send("ACCESS DENIED: INVALID MASTER PASSWORD");
-    }
+
+    // 단순 비밀번호 인증 (로그인 단계)
+    if (password === MASTER_PW && !command) return res.send("MASTER CONTROL READY...");
+    if (password !== MASTER_PW) return res.send("ACCESS DENIED: INVALID MASTER PASSWORD");
 
     const args = command.split(' ');
-    const cmd = args[0];  // serv
-    const sub = args[1];  // on, off, eolo, login, status...
+    const cmd = args[0];
+    const sub = args[1];
 
-    // 명령어 분기
+    // [명령어: serv]
     if (cmd === "serv") {
-        switch(sub) {
-            case "on":
-                if (isServiceActive) return res.send("Already Running");
-                isServiceActive = true;
-                return res.send("SERVER STARTED SUCCESSFULLY.");
-            
-            case "off":
-                if (!isServiceActive) return res.send("Already Stopped");
-                isServiceActive = false;
-                activeSessions = {}; // 모든 세션 즉시 파기
-                return res.send("SERVER STOPPED. ALL SESSIONS TERMINATED.");
-            
-            case "eolo":
-                activeSessions = {};
-                return res.send("LOGOUT ALL SESSION");
-                
-            default:
-                return res.send("UNKNOWN SUB-COMMAND.");
+        if (sub === "on") {
+            if (isServiceActive) return res.send("Already Running");
+            isServiceActive = true;
+            return res.send("SERVER STARTED SUCCESSFULLY.");
+        }
+        if (sub === "off") {
+            if (!isServiceActive) return res.send("Already Stopped");
+            isServiceActive = false;
+            activeSessions = {}; // 정지 시 전원 로그아웃
+            return res.send("SERVER STOPPED. ALL SESSIONS TERMINATED.");
+        }
+        if (sub === "eolo") {
+            activeSessions = {};
+            return res.send("LOGOUT ALL SESSION");
         }
     }
 
-    // 기존 세션 관리 명령어
+    // [명령어: login status]
     if (command === "login status") {
         const list = Object.entries(activeSessions).map(([id, s]) => `${s.sessionName} - ${id}`).join('\n');
         return res.send(list || "NO ACTIVE SESSIONS.");
     }
 
-    if (cmd === "logout" && args[1]) {
-        const target = args[1];
+    // [명령어: logout 세션명]
+    if (cmd === "logout" && sub) {
         let found = false;
         for (let id in activeSessions) {
-            if (activeSessions[id].sessionName === target) {
+            if (activeSessions[id].sessionName === sub) {
                 delete activeSessions[id];
                 found = true; break;
             }
         }
-        return res.send(found ? `SESSION [${target}] TERMINATED.` : "SESSION NOT FOUND.");
+        return res.send(found ? `SESSION [${sub}] TERMINATED.` : "SESSION NOT FOUND.");
     }
 
-    return res.send("COMMAND NOT RECOGNIZED.");
-});
-
-// app.js의 /test 라우트 수정
-app.get('/test', (req, res) => {
-  // 현재 접속 중인 모든 세션의 ID(또는 이름) 목록을 추출
-  const sessionNames = Object.values(activeSessions).map(s => s.name);
-
-  res.json({
-    connection: 1,
-    activeSessions: sessionNames // 현재 로그인된 명단을 배열로 보냄
-  });
+    return res.send("UNKNOWN COMMAND.");
 });
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, "0.0.0.0", () => console.log(`Server is running on port ${PORT}`));
