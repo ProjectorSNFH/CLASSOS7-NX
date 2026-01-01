@@ -4,23 +4,19 @@
     <meta charset="UTF-8">
     <title>MASTER CONTROL TERMINAL</title>
     <style>
-        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', Courier, monospace; padding: 20px; line-height: 1.4; overflow-x: hidden; }
-        .output { white-space: pre-wrap; word-wrap: break-word; margin-bottom: 20px; }
-        .input-line { display: flex; align-items: center; }
-        .prompt { margin-right: 10px; color: #00ff41; font-weight: bold; }
+        body { background: #000; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; }
+        .output { white-space: pre-wrap; margin-bottom: 20px; }
+        .input-line { display: flex; }
         input { background: transparent; border: none; color: #00ff41; font-family: inherit; font-size: 1rem; outline: none; flex: 1; }
-        ::selection { background: #00ff41; color: black; }
     </style>
 </head>
 <body>
-    <div class="output" id="output">Master Control v0.1 (SNFH OS System)
+    <div class="output" id="output">Master Control v0.1
 --------------------------------------------------
-SYSTEM READY. PLEASE START SESSION.
-TYPE 'serv login' TO ACCESS.</div>
+TYPE 'serv login' TO START.</div>
 
     <div class="input-line">
-        <span class="prompt">></span>
-        <input type="text" id="consoleInput" autofocus autocomplete="off">
+        <span>> </span><input type="text" id="consoleInput" autofocus autocomplete="off">
     </div>
 
     <script>
@@ -39,41 +35,40 @@ TYPE 'serv login' TO ACCESS.</div>
             if (e.key === 'Enter') {
                 const val = input.value.trim();
                 input.value = "";
+                if (!val) return;
 
-                // 1. 로그아웃 상태에서 명령 시도 시
+                // 1. 로그인 안된 상태에서 명령어 입력 차단
                 if (!isAuthorized && !isWaitingPassword && val !== "serv login") {
                     print(`> ${val}\nACCESS DENIED: NO PERMISSION`);
                     return;
                 }
 
-                // 2. serv logout 처리
-                if (val === "serv logout") {
-                    isAuthorized = false;
-                    masterPassword = "";
-                    print("> serv logout\nMASTER LOGGED OUT. ACCESS RESTRICTED.");
-                    return;
-                }
-
-                // 3. serv login 처리
+                // 2. serv login 입력 시
                 if (val === "serv login") {
                     isWaitingPassword = true;
                     print("> serv login\nENTER MASTER PASSWORD:");
                     return;
                 }
 
-                // 4. API 전송 로직
-                try {
-                    const payload = {
-                        password: isWaitingPassword ? val : masterPassword,
-                        command: isWaitingPassword ? "" : val
-                    };
+                // 3. serv logout 입력 시
+                if (val === "serv logout") {
+                    isAuthorized = false;
+                    masterPassword = "";
+                    print("> serv logout\nLOGGED OUT.");
+                    return;
+                }
 
-                    const res = await fetch("/admin/master-control", {
+                // 4. 서버 통신
+                try {
+                    const response = await fetch("/admin/master-control", {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({
+                            password: isWaitingPassword ? val : masterPassword,
+                            command: isWaitingPassword ? "" : val
+                        })
                     });
-                    const result = await res.text();
+                    const result = await response.text();
 
                     if (isWaitingPassword) {
                         if (result.includes("READY")) {
@@ -89,7 +84,7 @@ TYPE 'serv login' TO ACCESS.</div>
                         print(`> ${val}\n${result}`);
                     }
                 } catch (err) {
-                    print("ERROR: SERVER CONNECTION FAILED.");
+                    print("ERROR: SERVER UNREACHABLE.");
                 }
             }
         });

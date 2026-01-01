@@ -48,18 +48,26 @@ app.get('/auth', (req, res) => {
 });
 
 // 4. 마스터 컨트롤 API
+// ... 상단 생략 (express, cors 등 기존 유지) ...
+
 app.post('/admin/master-control', (req, res) => {
     const { password, command } = req.body;
 
-    // 단순 비밀번호 인증 (로그인 단계)
-    if (password === MASTER_PW && !command) return res.send("MASTER CONTROL READY...");
-    if (password !== MASTER_PW) return res.send("ACCESS DENIED: INVALID MASTER PASSWORD");
+    // 1. 비밀번호 틀림
+    if (password !== MASTER_PW) {
+        return res.send("ACCESS DENIED: INVALID MASTER PASSWORD");
+    }
 
+    // 2. 로그인 성공 (비번은 맞는데 명령어가 없는 경우)
+    if (!command || command === "") {
+        return res.send("MASTER CONTROL READY...");
+    }
+
+    // 3. 명령어 처리
     const args = command.split(' ');
     const cmd = args[0];
     const sub = args[1];
 
-    // [명령어: serv]
     if (cmd === "serv") {
         if (sub === "on") {
             if (isServiceActive) return res.send("Already Running");
@@ -69,7 +77,7 @@ app.post('/admin/master-control', (req, res) => {
         if (sub === "off") {
             if (!isServiceActive) return res.send("Already Stopped");
             isServiceActive = false;
-            activeSessions = {}; // 정지 시 전원 로그아웃
+            activeSessions = {}; 
             return res.send("SERVER STOPPED. ALL SESSIONS TERMINATED.");
         }
         if (sub === "eolo") {
@@ -78,13 +86,11 @@ app.post('/admin/master-control', (req, res) => {
         }
     }
 
-    // [명령어: login status]
     if (command === "login status") {
         const list = Object.entries(activeSessions).map(([id, s]) => `${s.sessionName} - ${id}`).join('\n');
         return res.send(list || "NO ACTIVE SESSIONS.");
     }
 
-    // [명령어: logout 세션명]
     if (cmd === "logout" && sub) {
         let found = false;
         for (let id in activeSessions) {
