@@ -44,6 +44,11 @@ app.post('/login', (req, res) => {
   }
 });
 
+// app.js 에 추가
+app.get('/test', (req, res) => {
+  res.json({ connection: 1 });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`서버가 포트 ${PORT}에서 실행 중입니다.`);
