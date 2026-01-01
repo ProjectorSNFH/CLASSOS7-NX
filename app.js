@@ -35,7 +35,7 @@ app.post('/login', (req, res) => {
 
         res.json({ 
             success: true, 
-            user: { name: user.name, role: user.role, sessionName: sessionName } 
+            user: { name: user.name, role: user.role, sessionName: sessionName, number: user.number } 
         });
     } else {
         res.status(401).json({ success: false, message: "아이디 또는 비밀번호가 틀립니다." });
