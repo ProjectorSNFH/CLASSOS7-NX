@@ -3,13 +3,14 @@ const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const students = require('./student'); // 데이터 불러오기
 
+
 const app = express();
 
 // 미들웨어 설정
 app.use(express.json()); // JSON 요청 본문 파싱
 app.use(cookieParser()); // 쿠키 파싱
 app.use(cors({
-  origin: 'https://classos7.vercel.app/', // 프론트엔드 주소 입력
+  origin: true, // 프론트엔드 주소 입력
   credentials: true // 쿠키 전송 허용
 }));
 
