@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MASTER CONTROL</title>
+    <style>
+        body { background: black; color: #00ff00; font-family: 'Courier New', Courier, monospace; padding: 20px; }
+        input { background: black; border: none; color: #00ff00; font-family: inherit; outline: none; width: 80%; }
+        .output { white-space: pre-wrap; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="output" id="output">
+Master Control v0.1
+----------------------------------
+ENTER MASTER PASSWORD TO INITIALIZE...
+    </div>
+    <span>> </span><input type="text" id="consoleInput" autofocus>
+
+    <script>
+        const input = document.getElementById('consoleInput');
+        const output = document.getElementById('output');
+        let masterPassword = "";
+        let isAuthorized = false;
+
+        const SERVER_URL = "https://above-gayel-hyperstylelife-258ff702.koyeb.app/admin/master-control";
+
+        input.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value;
+                input.value = "";
+
+                if (!isAuthorized) {
+                    // 비번 인증 단계
+                    masterPassword = val;
+                    const res = await fetch(SERVER_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ password: masterPassword })
+                    });
+                    const text = await res.text();
+                    output.innerText += "\n" + text;
+                    if (text.includes("READY")) isAuthorized = true;
+                } else {
+                    // 명령어 전송 단계
+                    const res = await fetch(SERVER_URL, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ password: masterPassword, command: val })
+                    });
+                    const text = await res.text();
+                    output.innerText += "\n> " + val + "\n" + text;
+                }
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+        });
+    </script>
+</body>
+</html>
