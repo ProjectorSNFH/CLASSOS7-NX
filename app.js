@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const students = require('./student');
+const path = require('path'); 
 
 const app = express();
 
@@ -53,6 +54,11 @@ app.post('/login', (req, res) => {
     } else {
         return res.status(401).json({ success: false, message: "ID/PW 불일치" });
     }
+});
+
+app.get('/auth', (req, res) => {
+    // __dirname은 현재 app.js가 있는 폴더 위치입니다.
+    res.sendFile(path.join(__dirname, 'MasterControl.html'));
 });
 
 // 2. 관리자 마스터 컨트롤 (DOS 스타일 API)
