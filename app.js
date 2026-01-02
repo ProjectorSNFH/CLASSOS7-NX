@@ -5,7 +5,7 @@ const students = require('./student'); // 학생 명단 파일
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({ origin: "https://classos7.vercel.app/", credentials: true }));
 
 // --- 서버 상태 및 세션 저장소 ---
 let activeSessions = {};   // { "학번": { name: "이름", sessionName: "세션ID" } }
