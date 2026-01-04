@@ -17,7 +17,7 @@ const students = [
   {
     number: 0,
     name: "관리자",
-    id: "administator",
+    id: "administrator",
     password: "password",
     role: "A"
   },
