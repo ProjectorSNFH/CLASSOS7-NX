@@ -13,7 +13,14 @@ const students = [
     id: "std02",
     password: "pw02!",
     role: "T"
-  }
+  },
+  {
+    number: 0,
+    name: "관리자",
+    id: "administator",
+    password: "password",
+    role: "A"
+  },
 ];
 
 module.exports = students;
