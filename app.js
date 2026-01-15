@@ -19,6 +19,10 @@ app.get('/test', (req, res) => {
         activeSessions: Object.values(activeSessions).map(s => s.name) 
     });
 });
+app.get('/', (req, res) => {
+    // 파일 이름을 MasterControl.html로 쓰고 계시다면 아래와 같이 설정
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // 2. 로그인 처리
 app.post('/login', (req, res) => {
