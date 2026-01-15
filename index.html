@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLASS(OS) 7 - LOGIN SERVER</title>
-    <style>
+<style>
         :root {
             --bg-color: #000000;
             --dot-color: rgba(255, 255, 255, 0.219);
-            --snow-color: rgba(255, 255, 255, 0.8);
-            --text-online: #00ff00; /* 온라인: 초록색 */
-            --text-offline: #ff3b30; /* 오프라인: 빨간색 */
+            --text-online: #00ff00;
+            --text-offline: #ff3b30;
         }
 
         body {
@@ -29,25 +28,31 @@
             background-size: 24px 24px; z-index: 1;
         }
 
-        /* 눈 내리는 효과 */
+        /* [복구] 기존 프론트엔드 눈 효과 코드 그대로 적용 */
         .snow-layer {
-            position: fixed; top: -100%; left: 0; right: 0; bottom: 0;
-            pointer-events: none; z-index: 2;
-        }
-        .snow-layer.one {
+            content: "";
+            position: fixed;
+            top: -100%;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
             background-image: 
-                radial-gradient(3px 3px at 20px 30px, var(--snow-color), transparent),
-                radial-gradient(4px 4px at 150px 120px, var(--snow-color), transparent);
-            background-size: 320px 320px;
-            animation: snowFallAnim 12s linear infinite;
+                radial-gradient(4px 4px at 20px 30px, #fff, rgba(255,255,255,0)),
+                radial-gradient(3px 3px at 50px 70px, #fff, rgba(255,255,255,0)),
+                radial-gradient(5px 5px at 90px 40px, #fff, rgba(255,255,255,0)),
+                radial-gradient(4px 4px at 150px 120px, #fff, rgba(255,255,255,0)),
+                radial-gradient(3px 3px at 200px 80px, #fff, rgba(255,255,255,0));
+            background-size: 300px 300px;
+            animation: snowFallAnim 10s linear infinite;
+            opacity: 0.6;
         }
-        .snow-layer.two {
-            background-image: 
-                radial-gradient(5px 5px at 10px 10px, var(--snow-color), transparent),
-                radial-gradient(100px 150px at 100px 150px, var(--snow-color), transparent);
-            background-size: 450px 450px;
-            animation: snowFallAnim 18s linear infinite;
-            opacity: 0.4;
+
+        /* 입체감을 위한 두 번째 레이어 (애니메이션 속도만 다르게) */
+        .snow-layer.secondary {
+            animation-duration: 15s;
+            opacity: 0.3;
         }
 
         @keyframes snowFallAnim {
@@ -58,16 +63,15 @@
         /* 중앙 상태 텍스트 */
         #statusText {
             position: relative;
-            z-index: 10;
+            z-index: 10000; /* 눈보다 앞에 오도록 설정 */
             font-size: 1.5rem;
             letter-spacing: 4px;
             font-weight: 800;
             transition: all 0.5s ease;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
         }
 
-        .online { color: var(--text-online); }
-        .offline { color: var(--text-offline); }
+        .online { color: var(--text-online); text-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+        .offline { color: var(--text-offline); text-shadow: 0 0 15px rgba(255, 59, 48, 0.5); }
     </style>
 </head>
 <body>
