@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassOS Login Server</title>
+    <style>
+        /* 1. 기본 스타일 초기화 */
+        :root {
+            --bg-color: #000000;
+            --dot-color: rgba(255, 255, 255, 0.219);
+            --snow-color: rgba(255, 255, 255, 0.8);
+            --text-color: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            width: 100%;
+            height: 100vh;
+            overflow: hidden; /* 눈이 화면 밖으로 나가도 스크롤 방지 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 2. 낫싱 스타일 도트 배경 (dashboard.html 참고) */
+        .dot-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(var(--dot-color) 1px, transparent 0);
+            background-size: 24px 24px;
+            z-index: 1; /* 눈보다는 뒤에 위치 */
+        }
+
+        /* 3. 눈 내리는 효과 (style.css 로직 추출) */
+        .snow-layer {
+            position: fixed;
+            top: -100%;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* 눈송이 레이어 1 */
+        .snow-layer.one {
+            background-image: 
+                radial-gradient(3px 3px at 20px 30px, var(--snow-color), transparent),
+                radial-gradient(4px 4px at 50px 70px, var(--snow-color), transparent),
+                radial-gradient(2px 2px at 90px 40px, var(--snow-color), transparent),
+                radial-gradient(3px 3px at 150px 120px, var(--snow-color), transparent);
+            background-size: 320px 320px;
+            animation: snowFallAnim 12s linear infinite;
+        }
+
+        /* 눈송이 레이어 2 (입체감용) */
+        .snow-layer.two {
+            background-image: 
+                radial-gradient(5px 5px at 10px 10px, var(--snow-color), transparent),
+                radial-gradient(3px 3px at 100px 150px, var(--snow-color), transparent);
+            background-size: 450px 450px;
+            animation: snowFallAnim 18s linear infinite;
+            opacity: 0.5;
+            filter: blur(0.5px);
+        }
+
+        @keyframes snowFallAnim {
+            from { transform: translateY(0); }
+            to { transform: translateY(100%); }
+        }
+
+        /* 중앙 텍스트 (옵션) */
+        .center-text {
+            position: relative;
+            z-index: 2;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="dot-overlay"></div>
+
+    <div class="snow-layer one"></div>
+    <div class="snow-layer two"></div>
+
+    <div class="center-text">
+        SYSTEM ONLINE
+    </div>
+
+    <script>
+        // 재미용으로 마우스 움직임에 따라 도트 배경이 미세하게 움직이는 효과 추가 가능
+        document.addEventListener('mousemove', (e) => {
+            const moveX = (e.clientX - window.innerWidth / 2) * 0.01;
+            const moveY = (e.clientY - window.innerHeight / 2) * 0.01;
+            document.querySelector('.dot-overlay').style.transform = `translate(${moveX}px, ${moveY}px)`;
+        });
+    </script>
+</body>
+</html>
