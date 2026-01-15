@@ -1,18 +1,11 @@
 // student.js
 const students = [
   {
-    number: 1,
-    name: "권윤서",
-    id: "std01",
-    password: "pw01!",
+    number: inf,
+    name: "게스트",
+    id: "guest",
+    password: "password",
     role: "N"
-  },
-  {
-    number: 2,
-    name: "김이은",
-    id: "std02",
-    password: "pw02!",
-    role: "T"
   },
   {
     number: 0,
