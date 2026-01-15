@@ -1,7 +1,7 @@
 // student.js
 const students = [
   {
-    number: inf,
+    number: 0,
     name: "게스트",
     id: "guest",
     password: "password",
