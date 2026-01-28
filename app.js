@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const students = require('./student'); // 학생 명단 파일
-
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: "https://classos7.vercel.app", credentials: true }));
@@ -10,7 +9,7 @@ app.use(cors({ origin: "https://classos7.vercel.app", credentials: true }));
 // --- 서버 상태 및 세션 저장소 ---
 let activeSessions = {};   // { "학번": { name: "이름", sessionName: "세션ID" } }
 let isServiceActive = true; 
-const MASTER_PW = "1234";
+const MASTER_PW = process.env.MASTER_PW; // 마스터 비밀번호
 
 // 1. 서버 상태 체크 (프론트엔드 실시간 감시용)
 app.get('/test', (req, res) => {
